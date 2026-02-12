@@ -42,7 +42,7 @@
     }
 
     function deepSeekFix() {
-        const targetClass = '_0f72b0b ds-scroll-area';
+        const targetClass = 'ca1ef5b2 ds-scroll-area';
         const elements = document.querySelectorAll(`.${targetClass.split(' ').join('.')}`);
         elements.forEach(element => {
             element.style.padding = '0';
