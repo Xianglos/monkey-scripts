@@ -9,3 +9,6 @@
 
 # adblock-investing.js
 移除Investing.com的广告拦截弹窗
+
+# weibo-blacklist-filter.js
+根据黑名单关键词删除微博特定的 div 及其紧随的 footer
