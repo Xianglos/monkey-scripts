@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微博内容黑名单过滤
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      2026-03-17
 // @description  根据黑名单关键词删除微博特定的 div 及其紧随的 footer
 // @author       Xianglos
 // @match        https://weibo.com/*
