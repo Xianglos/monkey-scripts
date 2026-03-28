@@ -12,3 +12,6 @@
 
 # weibo-blacklist-filter.js
 根据黑名单关键词删除微博特定的 div 及其紧随的 footer
+
+# weibo-media-cleaner.js
+针对特定用户，删除无意义的配图和视频
