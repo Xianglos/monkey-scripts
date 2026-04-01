@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微博内容黑名单过滤
 // @namespace    http://tampermonkey.net/
-// @version      2026-03-17
+// @version      2026-04-1
 // @description  根据黑名单关键词删除微博特定的 div 及其紧随的 footer
 // @author       Xianglos
 // @match        https://weibo.com/*
@@ -28,7 +28,7 @@
     const TARGET_SELECTORS = [
         'div._body_m3n8j_63',
         'div.card-wrap',
-        'vue-recycle-scroller__item-view'
+        'div.vue-recycle-scroller__item-view'
     ];
 
     // 将所有选择器组合成一个字符串，用于 querySelectorAll
@@ -45,7 +45,7 @@
         return blacklist.some(word => text.includes(word));
     }
 
-     /**
+    /**
      * 获取匹配到的关键词
      * @param {string} text
      * @returns {string|null}
@@ -61,21 +61,57 @@
     }
 
     /**
-     * 处理单个目标元素：检查并删除
+     * 对 vue-recycle-scroller__item-view 类型的卡片进行文本屏蔽
+     * 将其内部 <a> 中的 <span> 文本改为【===已屏蔽===】
+     * @param {HTMLElement} div - 匹配到的卡片元素
+     */
+    function maskContentInItem(div) {
+        // 避免重复处理
+        if (div.getAttribute('data-weibo-filtered') === 'true') return;
+
+        // 找到所有 <a> 下的 <span> 并修改文本
+        const spans = div.querySelectorAll('a span');
+        if (spans.length === 0) {
+            //console.warn('[微博过滤] 未找到 a span，无法屏蔽文本，卡片将保持原样');
+            return;
+        }
+
+        spans.forEach(span => {
+            if (span.innerText !== '～～～Blocked～～～') {
+                span.innerText = '～～～Blocked～～～';
+            }
+        });
+
+        // 标记此卡片已处理，防止内部子元素再次触发删除
+        div.setAttribute('data-weibo-filtered', 'true');
+        console.log('[微博过滤] 已屏蔽卡片文本（替换 a span）');
+    }
+
+    /**
+     * 处理单个目标元素：根据类型决定删除或屏蔽文本
      * @param {HTMLElement} div
      */
     function processTargetDiv(div) {
         // 确保元素还在文档中
         if (!document.body.contains(div)) return;
 
+        // 如果该元素或其父级已被标记为屏蔽卡片，则跳过处理，避免内部元素被误删
+        if (div.closest('[data-weibo-filtered="true"]')) return;
+
         // 获取文本内容 (innerText 能获取到用户可见的文本)
         const text = div.innerText;
 
         if (isBlacklisted(text)) {
             const matchedKeyword = getMatchedKeyword(text);
-            //console.log('[微博过滤] 发现黑名单内容，正在删除...', text.substring(0, 20) + '...');
             console.log('[微博过滤] 匹配关键词:', matchedKeyword);
 
+            // 特殊处理：针对 vue-recycle-scroller__item-view 卡片，只屏蔽文本，不删除
+            if (div.matches('div.vue-recycle-scroller__item-view')) {
+                maskContentInItem(div);
+                return; // 屏蔽完成，不再执行删除逻辑
+            }
+
+            // 以下为原有删除逻辑（适用于 _body_m3n8j_63 和 card-wrap）
             // 1. 查找紧挨着它的下一个兄弟元素
             const nextSibling = div.nextElementSibling;
 
@@ -142,5 +178,5 @@
 
     console.log('[微博过滤] 脚本已启动，黑名单长度:', blacklist.length);
     console.log('[微博过滤] 监控的选择器:', TARGET_SELECTORS);
-
+    console.log('[微博过滤] 对 vue-recycle-scroller__item-view 卡片采用文本替换屏蔽');
 })();
