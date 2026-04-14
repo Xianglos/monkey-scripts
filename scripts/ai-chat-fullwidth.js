@@ -35,8 +35,21 @@
         });
     }
 
+    // 用于标记样式是否已注入，避免重复注入
+    let glmStyleInjected = false;
+
     // ========== 新增：智谱清言宽屏修复 ==========
     function chatGLMFix() {
+        // 【针对动态加载的优化】使用注入 <style> 的方式处理 markdown-body
+        // 这样无论网页后续动态生成多少个该元素，都会自动生效，且不会因为流式输出频繁触发 DOM 遍历导致卡顿
+        if (!glmStyleInjected) {
+            const style = document.createElement('style');
+            style.textContent = 'div[class*="markdown-body"] { max-width: 100% !important; }';
+            document.head.appendChild(style);
+            glmStyleInjected = true;
+        }
+
+        // 以下为只出现一次或少数几次的容器元素，保留内联样式修改即可
         // 1. class 包含 component-box-new 的 div，max-width 改为 100%
         document.querySelectorAll('div[class*="component-box-new"]').forEach(element => {
             element.style.maxWidth = '100%';
@@ -52,12 +65,7 @@
             element.style.maxWidth = '100%';
         });
 
-        // 4. class 包含 markdown-body 的 div，删除 max-width 属性
-        document.querySelectorAll('div[class*="markdown-body"]').forEach(element => {
-            element.style.removeProperty('max-width');
-        });
-
-        // 5. class 完全等于 "item conversation-item" 的 div，删除 max-width 并设为 100%
+        // 4. class 完全等于 "item conversation-item" 的 div，删除 max-width 并设为 100%
         document.querySelectorAll('div[class="item conversation-item"]').forEach(element => {
             element.style.removeProperty('max-width');
             element.style.setProperty('max-width', '100%', 'important');
@@ -69,7 +77,7 @@
             douBaoFix();
         } else if (window.location.host.includes('deepseek.com')) {
             deepSeekFix();
-        } else if (window.location.host.includes('chatglm.cn')) {   // 新增分支
+        } else if (window.location.host.includes('chatglm.cn')) {
             chatGLMFix();
         }
     }
